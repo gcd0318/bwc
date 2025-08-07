@@ -86,6 +86,30 @@ def init_board(sensehat, brd=None):
     return board
 
 
+def color_in_line(board, pos, color=DARK, vertical=False):
+    res = 0
+
+    x, y = pos
+    if vertical:
+        for i in range(8):
+            res += int(eq_color(board[pos2index(x, i)], color))
+    else:
+        for i in range(8):
+            res += int(eq_color(board[pos2index(x, y)], color))
+    return res
+
+
+def end_corner(board, pos):
+    return (1 == color_in_line(board, pos, color=DARK, vertical=True)) and (1 == color_in_line(board, pos, color=DARK, vertical=False))
+
+
+
+
+
+
+
+
+
 def eq_color(c0, c1):
     res = True
     i = 0
@@ -99,56 +123,77 @@ def clamp(value, min_value=0, max_value=7):
     return value % 8
 #    return min(max_value, max(min_value, value))
 
+
+def push_action(board, pos, direction):
+    def _up(x, y):
+        return x, clamp(y - 1)
+    def _down(x, y):
+        return x, clamp(y + 1)
+    def _left(x, y):
+        return clamp(x - 1), y
+    def _right(x, y):
+        return clamp(x + 1), y
+    
+    x, y = pos
+    tmp = 0
+    direction = direction.upper()
+
+    if 'U' == direction:
+        x, y = _up(x, y)
+    elif 'D' == direction:
+        x, y = _down(x, y)
+    elif 'L' == direction:
+        x, y = _left(x, y)
+    elif 'R' == direction:
+        x, y = _right(x, y)
+
+    while (not eq_color(board[pos2index(x, y)], DARK)) and (tmp < 8):
+        tmp += 1
+        if 'U' == direction:
+            x, y = _up(x, y)
+        elif 'D' == direction:
+            x, y = _down(x, y)
+        elif 'L' == direction:
+            x, y = _left(x, y)
+        elif 'R' == direction:
+            x, y = _right(x, y)
+    return (x, y)
+
+
 def pushed_up(event):
     global pos0, pos1, color0, board
-    tmp = []
     color0 = DARK
     x, y = pos0
+
     if event.action != ACTION_RELEASED:
-        y = clamp(y - 1)
-        while (not eq_color(board[pos2index(x, y)], DARK)) and (8 > len(tmp)):
-            tmp.append(y)
-            y = clamp(y - 1)
-        pos1 = (x, y)
+        pos1 = push_action(board, pos0, direction='U')
 
 
 def pushed_down(event):
     global pos0, pos1, color0, board
-    tmp = []
     color0 = DARK
     x, y = pos0
+
     if event.action != ACTION_RELEASED:
-        y = clamp(y + 1)
-        while (not eq_color(board[pos2index(x, y)], DARK)) and (8 > len(tmp)):
-            tmp.append(y)
-            y = clamp(y + 1)
-        pos1 = (x, y)
+        pos1 = push_action(board, pos0, direction='D')
 
 
 def pushed_left(event):
     global pos0, pos1, color0, board
-    tmp = []
     color0 = DARK
     x, y = pos0
+
     if event.action != ACTION_RELEASED:
-        x = clamp(x - 1)
-        while (not eq_color(board[pos2index(x, y)], DARK)) and (8 > len(tmp)):
-            tmp.append(x)
-            x = clamp(x - 1)
-        pos1 = (x, y)
+        pos1 = push_action(board, pos0, direction='L')
 
 
 def pushed_right(event):
     global pos0, pos1, color0, board
-    tmp = []
     color0 = DARK
     x, y = pos0
+
     if event.action != ACTION_RELEASED:
-        x = clamp(x + 1)
-        while (not eq_color(board[pos2index(x, y)], DARK)) and (8 > len(tmp)):
-            tmp.append(x)
-            x = clamp(x + 1)
-        pos1 = (x, y)
+        pos1 = push_action(board, pos0, direction='R')
 
 
 
